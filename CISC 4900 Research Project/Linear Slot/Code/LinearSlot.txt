@@ -1,0 +1,171 @@
+N05 G10 L1 P1 R.0625
+N10 T1 M6
+
+N15 #<_depthOfZ> = 1;
+N20 #2 = 0;
+
+N25 F10;
+
+N30 G0 X 1
+N35 Y 0.5;
+N40 G91;
+
+// BEGINNING of sub-routine.
+N45 o100 sub;
+
+	
+	N50 #1 = 0;
+	N55 G1 Z -0.03;
+
+	N60 o101 while [#1 LT 6];
+	// BEGINNING of while loop.
+		
+		N65 X 3.875;
+		N70 Z [#<_depthOfZ> * 0.03];
+		N75 X -3.875;
+		N80 Z [#<_depthOfZ> * -0.03];
+		N85 Y 0.0625;
+		
+	N90 #1 = [#1 + 1];
+
+	N95 o101 endwhile;
+	// END of while loop.
+	
+	
+	N100 X 3.875;
+	N105 Z [#<_depthOfZ> * 0.03];
+	N110 G90;
+	N115 X 1 Y .5;
+	N120 G91;
+	N125 Z [#<_depthOfZ> * -0.03];
+
+N130 o100 endsub;
+// END of sub-routine.
+
+
+// BEGINNING of while loop to handle the entire program.
+N135 o103 while [#<_depthOfZ> LE 33];
+
+	
+	N140 o100 call;
+
+	N145 #<_depthOfZ> = [#<_depthOfZ> + 1];
+
+N150 o103 endwhile;
+// END of while loop.
+
+N155 Z -0.01
+
+N160 o104 while [#2 LT 6]
+//BEGINNING of while loop to handle the last 0.01 on the Z.	
+	
+	N165 X 3.875;
+	N170 Z 0.01;
+	N175 X -3.875;
+	N180 Z -0.01;
+	N185 Y 0.0625;
+	
+	N190 #2 = [#2 + 1];
+	
+N195 o104 endwhile
+//END of while loop.
+
+N200 X 3.875;
+N205 G90;
+N210 G0 Z 0
+N215 X 0 Y 0;
+
+
+N220 M2;
+// END of program.
+
+%
+
+--Documentation of G-code with corresponding lines (Nxx) along with a brief description of the code--
+
+We are using the down-milling approach when it comes to this program. Therefore to ensure feeding the material 
+the same direction as the spindle spinning we clear the material every time we reach our end point on the X axis.
+
+I have created this program with comepensation for the diameter of the tool manually rather than using G41/42.
+When the machine starts it decline on the Z axis, from our starting point it will create a hole 1/8 in diameter spanning 
+from X 0.9375 to X 1.0625 and Y 0.4375 to Y .5625. To compensate for the tools diameter manually we programmed the machine
+to stop at X 3.875 which will leave an excess of 1/16 making the vertical cut line span from X 0.9375 to X 3.9375 satisfying 
+the 4" long requirement. The same goes with the Y value. We programmed it to stop at Y 0.875 which will leave an excess of 1/16
+making the width span from Y 0.4375 to Y .9375 satisfying the 0.5" width. We then execute this process in while loops to satisfy
+the 1" deep requirement. Creating a 4" long 0.5" wide and 1" deep line.
+
+
+// N05 - Creating the tool with a radius of 1/16th of an inch (0.0625).
+// N10 - Selecting the tool.
+// N15 - Create variable named <_depthOfZ> and assign it a value of 1. 
+
+This variable will be determining the height of where we are cutting throughout the program.
+
+// N20 - Assign a second variable name 2 and assign it a value of 0. 
+
+This variable will be handling the last while loop to cut the remaining 0.01 inch on the Z axis.
+
+// N25 - Set a feedrate if 10 (simulation purposes)
+// N30 - Rapid move to X 1
+// N35 - Rapid move to Y 0.5 
+
+This will be our starting point.
+
+// N40 - Set incremental distance mode.
+// N45 - BEGINNING of a sub-routine ( o100 )
+// N50 - Declaring #1 as a local variable with value of 0 which we be reset each time the sub-routine is called that will handle the while loop.
+// N55 - Beginning of cutting. G1 linear movement. Moving the Z -0.03"
+// N60 - BEGINNING of while loop ( o101 ) with #1 < 6 as its condition.
+// N65 - Incrementing the X value by 3.875
+// N70 - Incrementing the Z value by <_depthOfZ> multiplied by 0.03 (in this first execution will be 1 * 0.03)
+
+The mill begins cutting at Z -0.03" After N70 the machine increments by + 0.03" to move back to Z 0.
+
+// N75 - Incrementing the X value -3.875 to reset the X-pos back to X 1.
+// N80 - Incrementing the Z value by <_depthOfZ> mutliply by -0.03 (in this first execution it will be 1 * -0.03)
+
+N70 and N80 are done so after the vertical cut the machine sets the Z to 0.03 above where it is cutting at 
+any given time dynamically with <_depthOfZ> which will be incremented by 1 each time during N135 ( o103 while loop )
+- N150 ( end of o103 ). Basically each time the machine cuts a line it will move up by + 0.03 to clear the material 
+while resetting the X back to 1 to then move back down to the material to repeat the process. We intend this to 
+ensure the safety of the tool and to ensure we are only cutting in a downmilling approach.
+
+// N85 - Increment the Y value by 0.0625
+// N90 - Increment the #1 variable by 1.
+// N95 - END of while loop ( o101 )
+// N100 - Increment the X value by 3.875
+// N105 - Increment the Z value by <_depthOfZ> * 0.03
+// N110 - Set absoulte distance mode.
+// N115 - Reposition the machine to starting point values. X 1 Y 0.5
+// N120 - Set incremental distance mode.
+// N125 - Increment the Z value by <_depthOfZ> * -0.03
+// N130 - END of sub-routine. ( o100 )
+// N135 - BEGINNING of while loop ( o103 ) while <_depthOfZ <= 33 as its condition.
+// N140 - Call o100 subrouting to be executed.
+// N145 - Incrementing <_depthOfZ> by 1
+// N150 - END of while loop ( o103 )
+
+At this point when the while loop ends we are still 0.01" shy of the 1" deep requirement.
+
+// N155 - (Still in incremental mode) Increment the Z value by -0.01 
+// N160 - BEGINNING of while loop ( o104 ) with #2 < 6 as its condition.
+
+This while loop is a repeat of o101 with the only difference being -0.01 as its target Z.
+
+// N165 - Increment the X value by 3.875
+// N170 - Increment the Z value by 0.01
+// N175 - Increment the X value by -3.875
+// N180 - Increment the Z value by -0.01
+// N185 - Increment the Y value by 0.0625
+// N190 - Increment #2 by 1.
+// N195 - End of while loop ( o104 )
+// N200 - Increment the X value by 3.875 
+
+N200 cuts the last vertical line achieving the proper dimensions of our task.
+
+// N205 - Select absolute distance mode.
+// N210 - Initiate G0 command. Move to Z 0.
+// N215 - Move to X 0 Y 0.
+// N220 - END of program.
+
+--End documentation--

@@ -1,0 +1,70 @@
+
+--Documentation of G-code with corresponding lines (Nxx)
+
+N05 - Creating the tool with a radius of 1/16th of an inch (0.0625).
+N10 - Selecting the tool.
+
+N15 - Create variable named <_xvalue> and assign it a value of 2. 
+<_xvalue> will be the starting x position.
+
+N20 - Create variable named <_yvalue> and assign it a value of 2.
+<_yvalue> will be the starting y position.
+
+N25 - Create variable named <_zvalue> and assign it a value of -0.03.
+<_zvalue> will be the variable responsible for decrementing the z axis to achieve depth requirements.
+
+N30 - Create variable named <_zdepth> and assign it a value of 1.
+<_zdepth> will be the while loop condition to create layers to reach a depth of 0.5"
+ 
+N35 - Set feed rate to 10
+N40 - Rapid move to X <_xvalue> and Y <_yvalue>
+N45 - Setting incremental mode.
+N50 - BEGINNING of a sub-routine ( o100 )
+
+N50 - Create variable named <_radius> which equals the radius of the circle being carved by the mill.
+The number is 0.9375 due to the fact that the end mill's diameter is 1/8 so for both radii (top point of circle 
+and bottom point of circle) they will be compensated with an excess 1/16" allowing the diameter to equal 2". 
+The while loop runs while <_radius> != 0.
+
+N60 - Linear movement Z axis <_zvalue>
+N65 - BEGINNING of while loop ( o101 ) which runs until <_radius> is 0, ensuring the proper amount of circles
+requires to satisfy the task.
+
+N70 - Arc mode with a radius of <_radius> for its I (x offset) and J (y offset) 0. P is 1, for 1 turn (only execute once).
+This line creates each circle.
+
+N75 - Incrementally moving the X axis by 0.0625.
+N80 - Subtracting 0.0625 from radius to satisfy moving the mill by only 1/16" at a time. Which also allows for smaller radius
+circles.
+
+N85 - END while. ( o101 )
+N90 - Liner movement Z axis by -(<_zvale>)
+Ensures the end mill clearing any debris by incrementing the Z axis by 0.03 wherever it previously was. 
+
+N95 - Absolute distance mode, linerarly moving X and Y by <_xvalue> and <_yvalue> respectively.
+N100 - Incremental mode, lowering the Z axis by <_zvalue>.
+
+N105 - END of sub-routine. ( o100 )
+N110 - BEGINNING of while loop
+
+N115 - Call o100 sub-routine. ( o102 )
+N120 - Increment <_zdepth> by 1.
+
+N125 - BEGINNING of if statement ( o103 )
+When we approach the last iteration of the while loop, we only reach .48" of depth. So to ensure the required depth
+without an extra while/sub-routine, inside the while loop we check for if the while loop's condition is going to be met
+then execute o100 once more but with <_zvalue> at -0.02. So we may get .5" of depth on the Z axis.
+
+N130 - Setting <_zdepth> to -0.02.
+N135 - Calling o100 sub-routine.
+N140 - END if ( o103 )
+
+N145 - END while. ( o102 )
+
+N150 - Absolute distance mode, rapid move Z axis to 0.
+N155 - Rapid move X & Y to 0.
+Above two lines "homes" the machine.
+
+N160 - END of program
+
+--End documentation--
